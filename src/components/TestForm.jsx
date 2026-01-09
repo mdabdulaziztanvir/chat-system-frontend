@@ -1,11 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import { socket } from "../socket/socket.js";
 const TestForm = () => {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [chatMessages, setChatMessages] = useState([]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(name, message);
+    // console.log({ name, message });
+
+    socket.emit("testMessage", { name, message });
   };
+  useEffect(() => {
+    socket.on("testMessage", (msg) => {
+      setChatMessages((prev) => [...prev, msg]);
+    });
+    return () => {
+      socket.off("testMessage");
+    };
+  }, []);
   return (
     <div className="m-3">
       <form className="" onSubmit={handleSubmit}>
@@ -24,10 +38,21 @@ const TestForm = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <button type="submit" className="">
+        <button type="submit" className=" m-3 outline-1">
           Submit Info
         </button>
       </form>
+      <div>
+        {chatMessages.length > 0
+          ? chatMessages.map((msgs, i) => (
+              <p key={i}>
+                {" "}
+                <strong>{msgs.name}:</strong>
+                {msgs.message}{" "}
+              </p>
+            ))
+          : "type message"}
+      </div>
     </div>
   );
 };
